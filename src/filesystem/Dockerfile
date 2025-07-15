@@ -7,8 +7,8 @@ COPY . .
 
 RUN npm install --ignore-scripts
 
-# Compile TypeScript
-RUN npx tsc -p ./tsconfig.json
+# Compile TypeScript using tsconfig.json in this directory
+RUN npx tsc
 
 # ---------- Release Stage ----------
 FROM node:22-alpine AS release
