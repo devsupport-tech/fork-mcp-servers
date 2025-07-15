@@ -2,12 +2,14 @@ FROM node:22.12-alpine AS builder
 
 WORKDIR /app
 
+# Copy all source files
 COPY . /app
 
-RUN --mount=type=cache,target=/root/.npm npm install --ignore-scripts
+# Install deps without running prepare (which breaks)
+RUN npm install --ignore-scripts
 
-RUN --mount=type=cache,target=/root/.npm-production npm ci --ignore-scripts --omit-dev
-
+# ✅ Compile TypeScript manually (safe and clean)
+RUN npx tsc
 
 FROM node:22-alpine AS release
 
