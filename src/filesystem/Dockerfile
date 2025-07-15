@@ -1,31 +1,26 @@
-# ---- Builder Stage ----
+# ---------- Build Stage ----------
 FROM node:22.12-alpine AS builder
 
-WORKDIR /app
+WORKDIR /src/filesystem
 
-# Copy everything from /src/filesystem
 COPY . .
 
-# Install all dependencies without lifecycle scripts
 RUN npm install --ignore-scripts
 
-# Compile TypeScript using local tsconfig.json
+# Compile TypeScript
 RUN npx tsc -p ./tsconfig.json
 
-# ---- Release Stage ----
+# ---------- Release Stage ----------
 FROM node:22-alpine AS release
 
 WORKDIR /app
 
-# Only bring in compiled code and required packages
-COPY --from=builder /app/dist /app/dist
-COPY --from=builder /app/package.json /app/package.json
-COPY --from=builder /app/package-lock.json /app/package-lock.json
+COPY --from=builder /src/filesystem/dist /app/dist
+COPY --from=builder /src/filesystem/package.json /app/package.json
+COPY --from=builder /src/filesystem/package-lock.json /app/package-lock.json
+
+RUN npm ci --ignore-scripts --omit=dev
 
 ENV NODE_ENV=production
 
-# Install only production dependencies
-RUN npm ci --ignore-scripts --omit=dev
-
-# Launch the server
 ENTRYPOINT ["node", "/app/dist/index.js"]
